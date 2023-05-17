@@ -8,3 +8,5 @@ target
 /.settings
 .env
 /RUNNING_PID
+app/.bsp/
+app/project/
