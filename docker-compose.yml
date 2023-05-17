@@ -1,0 +1,35 @@
+version: '3.4'
+x-common-variables: &tsa_variables
+  DB_SERVER: ${DB_SERVER}
+  DB_DATABASE: ${DB_DATABASE}
+  DB_USER_DATABASE: ${DB_USER_DATABASE}
+  DB_USER: ${DB_USER}
+  DB_USER_PASS: ${DB_USER_PASS}
+
+services:
+
+  sbt:
+    image: docker-registry.naturkundemuseum.berlin/tsa/tsa-gbif-tool:latest
+    container_name: tsa-gbif-tool
+    ports:
+      - "9000:9000"
+    #volumes:
+    #  - "./app:/app/app"
+    #  - "./app/conf/application_docker.conf:/app/conf/application.conf"
+    entrypoint: /bin/bash /tsa-gbif-tool/entrypoint.sh
+    environment:
+      <<: *tsa_variables
+
+#  tsa-db:
+#    image: "mariadb:10.8"
+#    container_name: "tsa-db-gbif-tool"
+#    restart: "${RESTART:-unless-stopped}"
+#    ports:
+#      - 3306:3306
+#    volumes:
+#      - tsa-mysql-data-api:/var/lib/mysql
+#    environment:
+#      <<: *tsa_variables
+
+#volumes:
+#  tsa-mysql-data-api:

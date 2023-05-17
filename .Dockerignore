@@ -1,0 +1,11 @@
+.bsp
+.g8
+.gitignore
+Dockerfile
+db-setup
+.env
+.git
+.idea
+docker-compose.yml
+logs
+test
