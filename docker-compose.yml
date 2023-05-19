@@ -13,23 +13,8 @@ services:
     container_name: tsa-gbif-tool
     ports:
       - "9000:9000"
-    #volumes:
-    #  - "./app:/app/app"
-    #  - "./app/conf/application_docker.conf:/app/conf/application.conf"
+    volumes:
+      - ./entrypoint.sh:/tsa-gbif-tool/entrypoint.sh
     entrypoint: /bin/bash /tsa-gbif-tool/entrypoint.sh
     environment:
       <<: *tsa_variables
-
-#  tsa-db:
-#    image: "mariadb:10.8"
-#    container_name: "tsa-db-gbif-tool"
-#    restart: "${RESTART:-unless-stopped}"
-#    ports:
-#      - 3306:3306
-#    volumes:
-#      - tsa-mysql-data-api:/var/lib/mysql
-#    environment:
-#      <<: *tsa_variables
-
-#volumes:
-#  tsa-mysql-data-api:

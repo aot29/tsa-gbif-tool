@@ -9,3 +9,4 @@ db-setup
 docker-compose.yml
 logs
 test
+.runAll
