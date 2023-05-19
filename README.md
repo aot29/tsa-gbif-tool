@@ -28,7 +28,13 @@ Makes a list of species used in the Main table
 ```curl -v localhost:9000/list```
 
 ## Development
-Do development on the host using `sbt run` etc. 
+Do development on the host. 
+The first time, copy `.env.example`to `.env`and set the required values.
+After that, you'll need to read the environment variables in the `.env` file before starting up sbt:
+```
+export $(xargs <.env)
+sbt run
+```
 
 **Note that the app is compiled when building the Dockerfile**,
 so when testing the Docker setup, changes to the code 
