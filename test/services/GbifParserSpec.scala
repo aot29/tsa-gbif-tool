@@ -17,19 +17,18 @@ class GbifParserSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
       responseSpecies.GbifUsageKey mustBe 2435099
       responseSpecies.status mustBe TaxonomicStatus.ACCEPTED
     }
-    /* To do: find a good example for a synonym
+
     "parse json response for synonym match" in {
-      val species:Species = new Species("Canis familiaris")
-      val jsonString: String = """{"usageKey":5219200,"acceptedUsageKey":6164210,"scientificName":"Canis familiaris Linnaeus, 1758","canonicalName":"Canis familiaris","rank":"SPECIES","status":"SYNONYM","confidence":100,"note":"Similarity: name=110; authorship=0; classification=4; rank=6; status=0; singleMatch=5","matchType":"EXACT","kingdom":"Animalia","phylum":"Chordata","order":"Carnivora","family":"Canidae","genus":"Canis","species":"Canis lupus","kingdomKey":1,"phylumKey":44,"classKey":359,"orderKey":732,"familyKey":9701,"genusKey":5219142,"speciesKey":5219173,"synonym":true,"class":"Mammalia"}"""
+      val species:Species = new Species("Bufo americanus")
+      val jsonString: String = """{"usageKey":5217021,"acceptedUsageKey":2422872,"scientificName":"Bufo americanus Holbrook, 1836","canonicalName":"Bufo americanus","rank":"SPECIES","status":"SYNONYM","confidence":100,"note":"Similarity: name=110; authorship=0; classification=4; rank=6; status=0; nextMatch=5","matchType":"EXACT","alternatives":[{"usageKey":5217030,"acceptedUsageKey":2422888,"scientificName":"Bufo mexicanus Brocchi, 1879","canonicalName":"Bufo mexicanus","rank":"SPECIES","status":"SYNONYM","confidence":15,"note":"Similarity: name=5; authorship=0; classification=4; rank=6; status=0","matchType":"FUZZY","kingdom":"Animalia","phylum":"Chordata","order":"Anura","family":"Bufonidae","genus":"Anaxyrus","species":"Anaxyrus mexicanus","kingdomKey":1,"phylumKey":44,"classKey":131,"orderKey":952,"familyKey":6727,"genusKey":2422857,"speciesKey":2422888,"synonym":true,"class":"Amphibia"}],"kingdom":"Animalia","phylum":"Chordata","order":"Anura","family":"Bufonidae","genus":"Anaxyrus","species":"Anaxyrus americanus","kingdomKey":1,"phylumKey":44,"classKey":131,"orderKey":952,"familyKey":6727,"genusKey":2422857,"speciesKey":2422872,"synonym":true,"class":"Amphibia"}"""
       var responseSpecies: Species = GbifParser.parse(species, jsonString)
-      responseSpecies.latinName mustBe "Canis familiaris"
-      responseSpecies.GbifUsageKey mustBe 5219200
+      responseSpecies.latinName mustBe "Bufo americanus"
+      responseSpecies.GbifUsageKey mustBe 5217021
       responseSpecies.status mustBe TaxonomicStatus.SYNONYM
       // if this is a synonym, put the gbif response for the synonym here
       responseSpecies.GbifResponse must not be None
       responseSpecies.GbifResponse mustBe jsonString
     }
-    */
     "parse json response for no match" in {
       val species: Species = new Species("div.")
       val jsonString: String = """{"usageKey":1,"scientificName":"Animalia","canonicalName":"Animalia","rank":"KINGDOM","status":"ACCEPTED","confidence":99,"note":"Similarity: name=100; classification=4; rank=12; status=1; nextMatch=5","matchType":"HIGHERRANK","kingdom":"Animalia","kingdomKey":1,"synonym":false}"""
