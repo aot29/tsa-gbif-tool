@@ -75,7 +75,7 @@ class GbifToolController @Inject()(var controllerComponents: ControllerComponent
         rowCount match {
           case None => NoContent
           case Some(0) =>
-            Conflict("Change rejected. Content probably set to IGNORE by admin")
+            Conflict("Change rejected. Content probably set to IGNORE by admin\n")
           case _ =>
             Accepted(json.Json.parse(gbifData))
         }
