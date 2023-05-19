@@ -71,8 +71,14 @@ class GbifToolController @Inject()(var controllerComponents: ControllerComponent
     gbifData match {
       case Some(gbifData) =>
         val parsedSpecies: Species = GbifParser.parse(species, gbifData)
-        DbService.updateGbifData(parsedSpecies)
-        Accepted(json.Json.parse(gbifData))
+        val rowCount = DbService.updateGbifData(parsedSpecies)
+        rowCount match {
+          case None => NoContent
+          case Some(0) =>
+            Conflict("Change rejected. Content probably set to IGNORE by admin")
+          case _ =>
+            Accepted(json.Json.parse(gbifData))
+        }
       case None => NoContent
     }
   }

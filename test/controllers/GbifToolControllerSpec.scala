@@ -43,5 +43,11 @@ class GbifToolControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injec
       contentType(resp) mustBe Some("application/json")
       contentAsString(resp) must include("\"canonicalName\":\"Ovis aries\"")
     }
+
+    "match 'div.', which is set to IGNORE" in {
+      val request = FakeRequest(PUT, "/match/div.")
+      val resp = route(app, request).get
+      status(resp) mustBe CONFLICT
+    }
   }
 }

@@ -128,7 +128,7 @@ object DbService {
         |UPDATE system SET GBIF_check=?, GBIF_response=?, GBIF_usage_key=?,
         |Familia=?, Familie_dt_="", Familia_en="",
         |Ordo=?, Ordnung_dt_=""
-        |WHERE Artname=?;""".stripMargin
+        |WHERE Artname=? AND GBIF_check!='IGNORE';""".stripMargin
     var connection: Connection = null
     try {
       connection = getConnection
