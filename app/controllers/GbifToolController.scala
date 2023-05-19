@@ -66,7 +66,6 @@ class GbifToolController @Inject()(var controllerComponents: ControllerComponent
    * GBIF equivalent https://api.gbif.org/v1/species/match?verbose=true&kingdom=Animalia&name=Puma_concolor
    * */
   def matchName(name: String): Action[AnyContent] = Action { implicit request: Request[AnyContent] =>
-    println("matchName")
     val gbifData = GbifService.matchName(name)
     val species = new Species(name.replace('_', ' '))
     gbifData match {

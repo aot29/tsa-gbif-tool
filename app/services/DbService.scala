@@ -116,8 +116,19 @@ object DbService {
     }
   }
 
+  /**
+   * Save the species data parsed from the GBIF response. Update the family and order, remove DE and EN family and order names.
+   *
+   * @param species a Species object containing the data parsed from GBIF as returned by the service.GbifParser
+   * @return number of rows changed, should be 1, or None if there's an error.
+   * */
   def updateGbifData(species:Species): Option[Int] = {
-    val query:String = "UPDATE system SET GBIF_check=?, GBIF_response=?, GBIF_usage_key=? WHERE Artname=?;"
+    val query:String =
+      """
+        |UPDATE system SET GBIF_check=?, GBIF_response=?, GBIF_usage_key=?,
+        |Familia=?, Familie_dt_="", Familia_en="",
+        |Ordo=?, Ordnung_dt_=""
+        |WHERE Artname=?;""".stripMargin
     var connection: Connection = null
     try {
       connection = getConnection
@@ -125,7 +136,9 @@ object DbService {
       statement.setString(1, species.status.toString)
       statement.setString(2, species.GbifResponse)
       statement.setInt(3, species.GbifUsageKey)
-      statement.setString(4, species.latinName)
+      statement.setString(4, species.familia)
+      statement.setString(5, species.ordo)
+      statement.setString(6, species.latinName)
       Some(statement.executeUpdate())
     } catch {
       case e: Exception => e.printStackTrace(); None
@@ -136,6 +149,9 @@ object DbService {
 
   /**
    * Reads the species lineage as stored in the system table.
+   *
+   * @param species a Species object containing the latinName of the species to be read from the DB
+   * @return a Species object with the lineage of the species filled-in, or None if no corresponding species found in the DB.
    * */
   def setLineage(species:Species):Option[Species] = {
     val query:String = "SELECT Artname,Familia,Ordo,Klasse FROM system WHERE Artname=?"
