@@ -50,13 +50,26 @@ will take effect in the container after rebuilding the
 image (even if the code directory is mounted on the container).
 
 ## Run the tests
+Make sure a database is running on the host at port 3306,
+e.g. by starting tsa-django-frontend with `docker-compose up -d`.
+
 ```
 export $(xargs <.env)
 sbt test
 ```
-Make sure a database is running on the host at port 3306, 
-e.g. by starting tsa-django-frontend with `docker-compose up -d`.
 
 ## Build the image
-`docker build -t docker-registry.naturkundemuseum.berlin/tsa/tsa-gbif-tool:latest .`
+The image is built in 2 stages. You only need to push the second stage.
 
+```
+docker build -t docker-registry.naturkundemuseum.berlin/tsa/tsa-gbif-tool:latest .
+docker push docker-registry.naturkundemuseum.berlin/tsa/tsa-gbif-tool:latest
+```
+
+Then on the server:
+
+```
+cd /local tsa
+docker pull docker-registry.naturkundemuseum.berlin/tsa/tsa-gbif-tool:latest
+docker-compose up -d
+```

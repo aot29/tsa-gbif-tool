@@ -103,7 +103,10 @@ object DbService {
    * @return Count of rows updated
    */
   def deleteAllGBIFData():Option[Int] = {
-    val query:String = "UPDATE system SET GBIF_check=NULL, GBIF_response=NULL, GBIF_usage_key=NULL;"
+    val query:String =
+      """
+        |UPDATE system SET GBIF_check=NULL, GBIF_response=NULL, GBIF_usage_key=NULL
+        |WHERE (GBIF_check IS NULL OR GBIF_check!='IGNORE');""".stripMargin
     var connection: Connection = null
     try {
       connection = getConnection

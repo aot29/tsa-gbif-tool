@@ -3,4 +3,3 @@ alter table system add column `GBIF_check` enum('ACCEPTED','SYNONYM','CONFLICTIN
 alter table system add column `GBIF_usage_key` int unsigned;
 alter table system add column `GBIF_response` JSON;
 update system set GBIF_check='IGNORE' where Artname="div.";
-update system set GBIF_check='IGNORE' where Artname="div.";

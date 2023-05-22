@@ -49,5 +49,14 @@ class GbifToolControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injec
       val resp = route(app, request).get
       status(resp) mustBe CONFLICT
     }
+
+    "Cleanup should not change rows set to IGNORE" in {
+      val request1 = FakeRequest(DELETE, "/cleanup")
+      val resp1 = route(app, request1).get
+      status(resp1) mustBe NO_CONTENT
+      val request2 = FakeRequest(PUT, "/match/div.")
+      val resp2 = route(app, request2).get
+      status(resp2) mustBe CONFLICT
+    }
   }
 }
