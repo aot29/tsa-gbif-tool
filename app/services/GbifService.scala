@@ -1,6 +1,8 @@
 package services
 
+import com.typesafe.config.ConfigFactory
 import requests.Response
+
 import java.net.URLEncoder
 
 /**
@@ -10,6 +12,7 @@ import java.net.URLEncoder
 object GbifService {
   private val GBIF_URL = "https://api.gbif.org/v1"
   private val SPECIES_MATCH_URL = GBIF_URL + "/species/match"
+  private val config = ConfigFactory.load()
 
   /**
    * Search the GBIF backbone for a name. Animals only.
@@ -20,17 +23,32 @@ object GbifService {
    */
   def matchName(name:String):Option[String] = {
     try {
-      val response:Response = requests.get(
-        SPECIES_MATCH_URL,
-        params = Map(
-          "verbose" -> "true",
-          "kingdom" -> "Animalia",
-          "name" -> URLEncoder.encode(name.replace(' ', '_'), "UTF-8")
-        )
+      val params = Map(
+        "verbose" -> "true",
+        "kingdom" -> "Animalia",
+        "name" -> URLEncoder.encode(name.replace(' ', '_'), "UTF-8")
       )
+      val response:Response = get(params)
       Some(response.text())
     } catch {
       case e: Exception => e.printStackTrace(); None
+    }
+  }
+
+  /**
+   * Executes a request, with or without proxy.
+   * Proxy settings are passed from .env to conf/application.conf
+   * Remember to do `export $(xargs <.env)` prior to `sbt run` when running from CLI,
+   * otherwise when running with Docker, .env is read on `docker-compose up -d`.
+   */
+  private def get(params:Map[String, String]): Response = {
+    if (config.hasPath("http.proxy") & config.getString("http.proxy").nonEmpty) {
+      val proxy = config.getString("http.proxy").split(':')
+      val proxy_url = proxy(1)
+      val proxy_port = proxy(2).toInt
+      requests.get(SPECIES_MATCH_URL, params = params, proxy = (proxy_url, proxy_port))
+    } else {
+      requests.get(SPECIES_MATCH_URL, params = params)
     }
   }
 

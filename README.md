@@ -6,31 +6,6 @@ Tools for pulling taxonomy from GBIF
 * Make sure the relevant environment variables are set in .env and passed in docker-compose.yml
 * Call `bash runAll.sh`on the host, probably from a cron job. The service will exit when the database update is done.
 
-## API
-Deletes all data from GBIF check columns in System table
-
-```curl -v --request DELETE localhost:9000/cleanup```
-
-Gets all species actually used in Main, mark these as used in the System table.
-
-```curl -v --request PUT localhost:9000/markAllUsed```
-
-Gets a list of species used in the Main table. 
-For each species, calls the GBIF API, get its status, usage key and evaluate the response.
-Updates the columns GBIF_check, GBIF_response, GBIF_usage_key in the system table.
-
-```curl -v --request PUT localhost:9000/matchAll```
-
-Matches a species name with the GBIF taxonomic backbone.
-REPLACE SPACES BY UNDERSCORES, like so: *Puma_concolor*.
-Updates the columns GBIF_check, GBIF_response, GBIF_usage_key in the system table.
-
-```curl -v --request PUT localhost:9000/match/Puma_concolor```
-
-Makes a list of species used in the Main table
-
-```curl -v localhost:9000/list```
-
 ## Development
 Do development on the host.
 
@@ -73,3 +48,28 @@ cd /local tsa
 docker pull docker-registry.naturkundemuseum.berlin/tsa/tsa-gbif-tool:latest
 docker-compose up -d
 ```
+
+## API
+Deletes all data from GBIF check columns in System table
+
+```curl -v --request DELETE localhost:9000/cleanup```
+
+Gets all species actually used in Main, mark these as used in the System table.
+
+```curl -v --request PUT localhost:9000/markAllUsed```
+
+Gets a list of species used in the Main table.
+For each species, calls the GBIF API, get its status, usage key and evaluate the response.
+Updates the columns GBIF_check, GBIF_response, GBIF_usage_key in the system table.
+
+```curl -v --request PUT localhost:9000/matchAll```
+
+Matches a species name with the GBIF taxonomic backbone.
+REPLACE SPACES BY UNDERSCORES, like so: *Puma_concolor*.
+Updates the columns GBIF_check, GBIF_response, GBIF_usage_key in the system table.
+
+```curl -v --request PUT localhost:9000/match/Puma_concolor```
+
+Makes a list of species used in the Main table
+
+```curl -v localhost:9000/list```
