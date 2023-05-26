@@ -2,8 +2,9 @@ package controllers
 
 import models.Species
 import play.api.libs.json
-import services.{DbService, GbifParser, GbifService}
+import services.{ConnectionFactory, DbService, GbifParser, GbifService, PersistentConnectionFactory}
 import play.api.mvc._
+
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json._
 
@@ -20,13 +21,17 @@ class GbifToolController @Inject()(var controllerComponents: ControllerComponent
     )
   }
 
+  private val factory:ConnectionFactory =new PersistentConnectionFactory
+  private val db: DbService = new DbService(factory)
+  private val parser: GbifParser = new GbifParser(factory)
+
   /**
    * Makes a list of species used in the Main table
    *
    * e.g. curl -v localhost:9000/list
    */
   def listSpecies(): Action[AnyContent] = Action { implicit request: Request[AnyContent] =>
-    val species  = DbService.listSpecies
+    val species  = db.listSpecies
     Ok(json.Json.toJson(species))
   }
 
@@ -36,8 +41,8 @@ class GbifToolController @Inject()(var controllerComponents: ControllerComponent
    * e.g. curl -v --request DELETE localhost:9000/cleanup
    */
   def cleanup: Action[AnyContent] = Action { implicit request:Request[AnyContent] =>
-   DbService.markAllUnused
-   DbService.deleteAllGBIFData()
+    db.markAllUnused
+    db.deleteAllGBIFData()
    NoContent
   }
 
@@ -48,10 +53,10 @@ class GbifToolController @Inject()(var controllerComponents: ControllerComponent
    * e.g. curl -v --request PUT localhost:9000/markAllUsed
    */
   def markAllUsed(): Action[AnyContent] = Action { implicit request:Request[AnyContent] =>
-    val speciesList  = DbService.listSpecies
+    val speciesList  = db.listSpecies
     speciesList match {
       case Some(speciesList) =>
-        DbService.markAllUsed(speciesList)
+        db.markAllUsed(speciesList)
         Accepted
       case None => NoContent
     }
@@ -70,8 +75,8 @@ class GbifToolController @Inject()(var controllerComponents: ControllerComponent
     val species = new Species(name.replace('_', ' '))
     gbifData match {
       case Some(gbifData) =>
-        val parsedSpecies: Species = GbifParser.parse(species, gbifData)
-        val rowCount = DbService.updateGbifData(parsedSpecies)
+        val parsedSpecies: Species = parser.parse(species, gbifData)
+        val rowCount = db.updateGbifData(parsedSpecies)
         rowCount match {
           case None => NoContent
           case Some(0) =>
@@ -91,16 +96,16 @@ class GbifToolController @Inject()(var controllerComponents: ControllerComponent
    * e.g. curl -v --request PUT localhost:9000/matchAll
    */
   def matchAll(): Action[AnyContent] = Action { implicit request: Request[AnyContent] =>
-    val speciesList  = DbService.listSpecies
+    val speciesList  = db.listSpecies
     speciesList match {
       case Some(speciesList) =>
         for(species <- speciesList) {
           val gbifData = GbifService.matchName(species.latinName)
           gbifData match {
             case Some(gbifData) =>
-              val parsedSpecies:Species = GbifParser.parse(species, gbifData)
+              val parsedSpecies:Species = parser.parse(species, gbifData)
               // println(parsedSpecies)
-              DbService.updateGbifData(parsedSpecies)
+              db.updateGbifData(parsedSpecies)
             case None =>
               println(species.latinName + " not found")
           }

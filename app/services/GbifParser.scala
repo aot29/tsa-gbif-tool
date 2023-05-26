@@ -1,15 +1,15 @@
 package services
 
-import models.{Species, TaxonomicStatus}
 import models.TaxonomicStatus.TaxonomicStatus
+import models.{Species, TaxonomicStatus}
 import play.api.libs.json
 import play.api.libs.json.{JsObject, JsValue}
-import services.DbService
 
 
-object GbifParser {
+class GbifParser(connectionFactory: ConnectionFactory) {
+
   def parse(species:Species, text: String): Species = {
-    DbService.setLineage(species)
+    new DbService(connectionFactory).setLineage(species) // load lineage from db
     val jsonVal = json.Json.parse(text)
     var parsedName:String = parseName(jsonVal)
     var parsedFamily:String = parseFamily(jsonVal)
