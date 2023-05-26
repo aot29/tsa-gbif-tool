@@ -38,13 +38,13 @@ object GbifService {
   /**
    * Executes a request, with or without proxy.
    * Proxy settings are passed from .env to conf/application.conf
-   * Remember to do `export $(xargs <.env)` prior to `sbt run` when running from CLI,
-   * otherwise when running with Docker, .env is read on `docker-compose up -d`.
+   * Remember to do `export $(xargs <.env)` prior to `sbt run` when running from CLI.
+   * When running with Docker, .env is read on `docker-compose up -d`.
    */
   private def get(params:Map[String, String]): Response = {
     if (config.hasPath("http.proxy") & config.getString("http.proxy").nonEmpty) {
       val proxy = config.getString("http.proxy").split(':')
-      val proxy_url = proxy(1)
+      val proxy_url = proxy(1).split("//")(1)
       val proxy_port = proxy(2).toInt
       requests.get(SPECIES_MATCH_URL, params = params, proxy = (proxy_url, proxy_port))
     } else {

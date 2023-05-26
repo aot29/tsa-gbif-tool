@@ -37,7 +37,7 @@ sbt test
 The image is built in 2 stages. You only need to push the second stage.
 
 ```
-docker build -t docker-registry.naturkundemuseum.berlin/tsa/tsa-gbif-tool:latest .
+docker build --no-cache -t docker-registry.naturkundemuseum.berlin/tsa/tsa-gbif-tool:latest .
 docker push docker-registry.naturkundemuseum.berlin/tsa/tsa-gbif-tool:latest
 ```
 

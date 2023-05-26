@@ -8,13 +8,13 @@ x-common-variables: &tsa_variables
 
 services:
 
-  sbt:
+  taxonomy:
     image: docker-registry.naturkundemuseum.berlin/tsa/tsa-gbif-tool:latest
     container_name: tsa-gbif-tool
     #ports:
     #  - "9000:9000"
-    volumes:
-      - ./entrypoint.sh:/tsa-gbif-tool/entrypoint.sh
+    #volumes:
+    #  - ./entrypoint.sh:/tsa-gbif-tool/entrypoint.sh
     entrypoint: /tsa-gbif-tool/entrypoint.sh
     environment:
       <<: *tsa_variables
