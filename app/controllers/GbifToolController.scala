@@ -2,7 +2,7 @@ package controllers
 
 import models.Species
 import play.api.libs.json
-import services.{ConnectionFactory, DbService, GbifParser, GbifService, PersistentConnectionFactory}
+import services.{GbifParser, GbifService, PersistentDbService => db}
 import play.api.mvc._
 
 import javax.inject.{Inject, Singleton}
@@ -21,9 +21,7 @@ class GbifToolController @Inject()(var controllerComponents: ControllerComponent
     )
   }
 
-  private val factory:ConnectionFactory =new PersistentConnectionFactory
-  private val db: DbService = new DbService(factory)
-  private val parser: GbifParser = new GbifParser(factory)
+  private val parser: GbifParser = new GbifParser(db)
 
   /**
    * Makes a list of species used in the Main table

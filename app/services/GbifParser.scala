@@ -6,10 +6,10 @@ import play.api.libs.json
 import play.api.libs.json.{JsObject, JsValue}
 
 
-class GbifParser(connectionFactory: ConnectionFactory) {
+class GbifParser(db: DbService) {
 
   def parse(species:Species, text: String): Species = {
-    new DbService(connectionFactory).setLineage(species) // load lineage from db
+    db.setLineage(species) // load lineage from db
     val jsonVal = json.Json.parse(text)
     var parsedName:String = parseName(jsonVal)
     var parsedFamily:String = parseFamily(jsonVal)

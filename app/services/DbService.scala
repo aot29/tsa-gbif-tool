@@ -1,15 +1,25 @@
 package services
 
 import models.Species
+import com.typesafe.config.ConfigFactory
 
-import java.sql.{Connection, PreparedStatement, Statement}
+import java.sql.{Connection, DriverManager, PreparedStatement, Statement}
+
+
 
 /**
  * Connect to the tsa_data database.
  * Connection settings are in .env,
  * and are passed to the container by docker-compose on service start.
  */
-class DbService(connectionFactory: ConnectionFactory) {
+trait DbService {
+
+  /**
+   * Opens a connection to the database.
+   *
+   * @return SQL connection
+   */
+  def getConnection: Connection
 
   /**
    * Lists all the species actually used in the Main table.
@@ -19,7 +29,7 @@ class DbService(connectionFactory: ConnectionFactory) {
   def listSpecies:Option[List[Species]] = {
     val query: String = "SELECT UNIQUE species FROM main"
     var result: List[Species] = List()
-    val connection = connectionFactory.getConnection
+    val connection = getConnection
     try {
       val statement: Statement = connection.createStatement
       val rs = statement.executeQuery(query)
@@ -41,7 +51,7 @@ class DbService(connectionFactory: ConnectionFactory) {
    */
   def markAllUnused:Option[Int] = {
     val query:String = "UPDATE system SET used_in_main=false;"
-    val connection = connectionFactory.getConnection
+    val connection = getConnection
     try {
       val statement: Statement = connection.createStatement
       Some(statement.executeUpdate(query))
@@ -61,7 +71,7 @@ class DbService(connectionFactory: ConnectionFactory) {
    */
   def markAllUsed(speciesList:List[Species]):Boolean = {
     val query:String = "UPDATE system SET used_in_main=true WHERE Artname = ?;"
-    val connection = connectionFactory.getConnection
+    val connection = getConnection
     try {
       val statement: PreparedStatement = connection.prepareStatement(query)
       for (species <- speciesList) {
@@ -87,7 +97,7 @@ class DbService(connectionFactory: ConnectionFactory) {
       """
         |UPDATE system SET GBIF_check=NULL, GBIF_response=NULL, GBIF_usage_key=NULL
         |WHERE (GBIF_check IS NULL OR GBIF_check!='IGNORE');""".stripMargin
-    val connection = connectionFactory.getConnection
+    val connection = getConnection
     try {
       val statement: Statement = connection.createStatement
       Some(statement.executeUpdate(query))
@@ -111,7 +121,7 @@ class DbService(connectionFactory: ConnectionFactory) {
         |Familia=?, Familie_dt_="", Familia_en="",
         |Ordo=?, Ordnung_dt_=""
         |WHERE Artname=? AND (GBIF_check IS NULL OR GBIF_check!='IGNORE');""".stripMargin
-    val connection = connectionFactory.getConnection
+    val connection = getConnection
     try {
       val statement: PreparedStatement = connection.prepareStatement(query)
       statement.setString(1, species.status.toString)
@@ -136,7 +146,7 @@ class DbService(connectionFactory: ConnectionFactory) {
    * */
   def setLineage(species:Species):Option[Species] = {
     val query:String = "SELECT Artname,Familia,Ordo,Klasse FROM system WHERE Artname=?"
-    val connection = connectionFactory.getConnection
+    val connection = getConnection
     try {
       val statement: PreparedStatement = connection.prepareStatement(query)
       statement.setString(1, species.latinName)
@@ -148,11 +158,30 @@ class DbService(connectionFactory: ConnectionFactory) {
       }
       Some(species)
     } catch {
-      case e: Exception => e.printStackTrace ();
+      case e: Exception => e.printStackTrace()
       None
     } finally {
       connection.close ()
     }
   }
+}
+
+object PersistentDbService extends DbService {
+  /**
+   * Opens a connection to the database.
+   *
+   * @return SQL connection
+   */
+  def getConnection: Connection = {
+    val config = ConfigFactory.load()
+    val driver = config.getString("db.driver")
+    val url = config.getString("db.url")
+    val username = config.getString("db.user")
+    val password = config.getString("db.password")
+
+    Class.forName(driver)
+    DriverManager.getConnection(url, username, password)
+  }
+
 }
 
