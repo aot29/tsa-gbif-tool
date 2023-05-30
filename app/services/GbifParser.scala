@@ -7,7 +7,6 @@ import play.api.libs.json.{JsObject, JsValue}
 
 
 class GbifParser(db: DbService) {
-
   def parse(species:Species, text: String): Species = {
     db.setLineage(species) // load lineage from db
     val jsonVal = json.Json.parse(text)
@@ -48,18 +47,18 @@ class GbifParser(db: DbService) {
    * @param jsonVal
    * @return
    */
-  def parseUsageKey(jsonVal: JsValue): Int = {
+  private def parseUsageKey(jsonVal: JsValue): Int = {
     if (jsonVal.as[JsObject].keys.contains("acceptedUsageKey"))
       jsonVal("acceptedUsageKey").as[Int]
     else
       jsonVal("usageKey").as[Int]
   }
 
-  def parseName(jsonVal: JsValue): String = {
+  private def parseName(jsonVal: JsValue): String = {
     jsonVal("canonicalName").as[String]
   }
 
-  def parseFamily(jsonVal: JsValue): String = {
+  private def parseFamily(jsonVal: JsValue): String = {
     try {
       jsonVal("family").as[String]
     } catch {
@@ -67,7 +66,7 @@ class GbifParser(db: DbService) {
     }
   }
 
-  def parseOrder(jsonVal: JsValue): String = {
+  private def parseOrder(jsonVal: JsValue): String = {
     try {
       jsonVal("order").as[String]
     } catch {
@@ -75,11 +74,11 @@ class GbifParser(db: DbService) {
     }
   }
 
-  def parseStatus(species: Species,
-                  parsedName:String,
-                  parsedFamily:String,
-                  parsedOrder:String,
-                  jsonVal: JsValue): TaxonomicStatus = {
+  private def parseStatus(species: Species,
+                          parsedName:String,
+                          parsedFamily:String,
+                          parsedOrder:String,
+                          jsonVal: JsValue): TaxonomicStatus = {
     if (species.latinName == parsedName && species.familia == parsedFamily && species.ordo == parsedOrder) {
       if (jsonVal("status").as[String] == "SYNONYM") {
         TaxonomicStatus.SYNONYM

@@ -73,3 +73,6 @@ Updates the columns GBIF_check, GBIF_response, GBIF_usage_key in the system tabl
 Makes a list of species used in the Main table
 
 ```curl -v localhost:9000/list```
+
+## See also:
+UML diagrams in `/doc`

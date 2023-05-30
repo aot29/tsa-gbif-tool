@@ -19,7 +19,7 @@ trait DbService {
    *
    * @return SQL connection
    */
-  def getConnection: Connection
+  protected def getConnection: Connection
 
   /**
    * Lists all the species actually used in the Main table.
@@ -172,7 +172,7 @@ object PersistentDbService extends DbService {
    *
    * @return SQL connection
    */
-  def getConnection: Connection = {
+  protected def getConnection: Connection = {
     val config = ConfigFactory.load()
     val driver = config.getString("db.driver")
     val url = config.getString("db.url")
