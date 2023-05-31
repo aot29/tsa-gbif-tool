@@ -6,7 +6,21 @@ import com.typesafe.config.ConfigFactory
 import java.sql.{Connection, DriverManager, PreparedStatement, Statement}
 
 
-
+object MySQLDbService extends DbService {
+  /**
+   * Opens a connection to the database.
+   *
+   * @return SQL connection
+   */
+  protected def getConnection: Connection = {
+    val config = ConfigFactory.load()
+    val driver = config.getString("db.driver")
+    val url = config.getString("db.url")
+    val username = config.getString("db.user")
+    val password = config.getString("db.password")
+    Class.forName(driver)
+    DriverManager.getConnection(url, username, password)
+  }
 
   /**
    * Lists all the species actually used in the Main table.
@@ -151,24 +165,5 @@ import java.sql.{Connection, DriverManager, PreparedStatement, Statement}
       connection.close ()
     }
   }
-}
-
-object PersistentDbService extends DbService {
-  /**
-   * Opens a connection to the database.
-   *
-   * @return SQL connection
-   */
-  protected def getConnection: Connection = {
-    val config = ConfigFactory.load()
-    val driver = config.getString("db.driver")
-    val url = config.getString("db.url")
-    val username = config.getString("db.user")
-    val password = config.getString("db.password")
-    println("%s %s %s %s", driver, url, username, password)
-    Class.forName(driver)
-    DriverManager.getConnection(url, username, password)
-  }
-
 }
 

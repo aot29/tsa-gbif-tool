@@ -2,7 +2,7 @@ package controllers
 
 import models.Species
 import play.api.libs.json
-import services.{GbifParser, GbifService, PersistentDbService => db}
+import services.{GbifParser, GbifService, MySQLDbService => db}
 import play.api.mvc._
 
 import javax.inject.{Inject, Singleton}
@@ -41,7 +41,7 @@ class GbifToolController @Inject()(var controllerComponents: ControllerComponent
   def cleanup: Action[AnyContent] = Action { implicit request:Request[AnyContent] =>
     db.markAllUnused
     db.deleteAllGBIFData()
-   NoContent
+    NoContent
   }
 
   /**

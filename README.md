@@ -4,7 +4,7 @@ Tools for pulling taxonomy from GBIF
 
 ## Production
 * Make sure the relevant environment variables are set in .env and passed in docker-compose.yml
-* Call `bash runAll.sh`on the host, probably from a cron job. The service will exit when the database update is done.
+* Call `docker exec -ti tsa-gbif-tool bash /tsa-gbif-tool/runAll.sh`, probably from a cron job. 
 
 ## Development
 Do development on the host.
@@ -14,6 +14,9 @@ e.g. by starting tsa-django-frontend with `docker-compose up -d`.
 
 The first time, copy `.env.example`to `.env`and set the required values.
 After that, you'll need to read the environment variables in the `.env` file before starting up sbt:
+
+When in development, set `DB_SERVER=localhost` in the `.env` file.
+
 ```
 export $(xargs <.env)
 sbt run
@@ -42,6 +45,7 @@ docker push docker-registry.naturkundemuseum.berlin/tsa/tsa-gbif-tool:latest
 ```
 
 Then on the server:
+When on the server, set `DB_SERVER` to the address of the actual db server in the `.env` file.
 
 ```
 cd /local tsa

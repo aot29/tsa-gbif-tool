@@ -9,7 +9,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerTest
 
 class GbifParserSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
 
-  private val parser: GbifParser = new GbifParser(PersistentDbService)
+  private val parser: GbifParser = new GbifParser(MySQLDbService)
 
   "GbifParser" should {
     "parse json response for exact match" in {
