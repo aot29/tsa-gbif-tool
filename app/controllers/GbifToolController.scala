@@ -2,11 +2,11 @@ package controllers
 
 import models.Species
 import play.api.libs.json
-import services.{GbifParser, GbifService, MySQLDbService => db}
+import play.api.libs.json._
 import play.api.mvc._
+import services.{GbifParser, GbifService, MySQLDbService}
 
 import javax.inject.{Inject, Singleton}
-import play.api.libs.json._
 
 /**
  * This controller creates an `Action` to handle HTTP requests to the
@@ -21,16 +21,21 @@ class GbifToolController @Inject()(var controllerComponents: ControllerComponent
     )
   }
 
-  private val parser: GbifParser = new GbifParser(db)
-
   /**
    * Makes a list of species used in the Main table
    *
    * e.g. curl -v localhost:9000/list
    */
   def listSpecies(): Action[AnyContent] = Action { implicit request: Request[AnyContent] =>
-    val species  = db.listSpecies
-    Ok(json.Json.toJson(species))
+    val db = new MySQLDbService()
+    try {
+      val species  = db.listSpecies
+      Ok(json.Json.toJson(species))
+    } catch {
+      case e: Exception => e.printStackTrace(); InternalServerError
+    } finally {
+      db.close()
+    }
   }
 
   /**
@@ -39,9 +44,16 @@ class GbifToolController @Inject()(var controllerComponents: ControllerComponent
    * e.g. curl -v --request DELETE localhost:9000/cleanup
    */
   def cleanup: Action[AnyContent] = Action { implicit request:Request[AnyContent] =>
-    db.markAllUnused
-    db.deleteAllGBIFData()
-    NoContent
+    val db = new MySQLDbService()
+    try {
+      db.markAllUnused
+      db.deleteAllGBIFData()
+      NoContent
+    } catch {
+      case e: Exception => e.printStackTrace(); InternalServerError
+    } finally {
+      db.close()
+    }
   }
 
   /**
@@ -51,12 +63,15 @@ class GbifToolController @Inject()(var controllerComponents: ControllerComponent
    * e.g. curl -v --request PUT localhost:9000/markAllUsed
    */
   def markAllUsed(): Action[AnyContent] = Action { implicit request:Request[AnyContent] =>
-    val speciesList  = db.listSpecies
-    speciesList match {
-      case Some(speciesList) =>
-        db.markAllUsed(speciesList)
-        Accepted
-      case None => NoContent
+    val db = new MySQLDbService()
+    try {
+      val speciesList  = db.listSpecies
+      db.markAllUsed(speciesList)
+      Accepted
+    } catch {
+      case e: Exception => e.printStackTrace(); InternalServerError
+    } finally {
+      db.close()
     }
   }
 
@@ -69,20 +84,27 @@ class GbifToolController @Inject()(var controllerComponents: ControllerComponent
    * GBIF equivalent https://api.gbif.org/v1/species/match?verbose=true&kingdom=Animalia&name=Puma_concolor
    * */
   def matchName(name: String): Action[AnyContent] = Action { implicit request: Request[AnyContent] =>
-    val gbifData = GbifService.matchName(name)
-    val species = new Species(name.replace('_', ' '))
-    gbifData match {
-      case Some(gbifData) =>
-        val parsedSpecies: Species = parser.parse(species, gbifData)
-        val rowCount = db.updateGbifData(parsedSpecies)
-        rowCount match {
+    val db = new MySQLDbService()
+    try {
+      val parser: GbifParser = new GbifParser(db)
+      val gbifData = GbifService.matchName(name)
+        gbifData match {
+          case Some(gbifData) =>
+            val species = new Species(name.replace('_', ' '))
+            val parsedSpecies: Species = parser.parse(species, gbifData)
+            val rowCount = db.updateGbifData(parsedSpecies)
+            rowCount match {
+              case 0 =>
+                Conflict("Change rejected. Content probably set to IGNORE by admin\n")
+              case _ =>
+                Accepted(json.Json.parse(gbifData))
+            }
           case None => NoContent
-          case Some(0) =>
-            Conflict("Change rejected. Content probably set to IGNORE by admin\n")
-          case _ =>
-            Accepted(json.Json.parse(gbifData))
-        }
-      case None => NoContent
+      }
+    } catch {
+      case e: Exception => e.printStackTrace(); InternalServerError
+    } finally {
+      db.close()
     }
   }
 
@@ -94,23 +116,26 @@ class GbifToolController @Inject()(var controllerComponents: ControllerComponent
    * e.g. curl -v --request PUT localhost:9000/matchAll
    */
   def matchAll(): Action[AnyContent] = Action { implicit request: Request[AnyContent] =>
-    val speciesList  = db.listSpecies
-    speciesList match {
-      case Some(speciesList) =>
-        for(species <- speciesList) {
-          val gbifData = GbifService.matchName(species.latinName)
-          gbifData match {
-            case Some(gbifData) =>
-              val parsedSpecies:Species = parser.parse(species, gbifData)
-              // println(parsedSpecies)
-              db.updateGbifData(parsedSpecies)
-            case None =>
-              println(species.latinName + " not found")
-          }
+    val db = new MySQLDbService()
+    try {
+      val parser: GbifParser = new GbifParser(db)
+      val speciesList  = db.listSpecies
+      for(species <- speciesList) {
+        val gbifData = GbifService.matchName(species.latinName)
+        gbifData match {
+          case Some(gbifData) =>
+            val parsedSpecies:Species = parser.parse(species, gbifData)
+            // println(parsedSpecies)
+            db.updateGbifData(parsedSpecies)
+          case None =>
+            println(species.latinName + " not found")
         }
-        Accepted
-      case None =>
-        NoContent
+      }
+      Accepted
+    } catch {
+      case e: Exception => e.printStackTrace(); InternalServerError
+    } finally {
+      db.close()
     }
   }
 }

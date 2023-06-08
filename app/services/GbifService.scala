@@ -22,17 +22,13 @@ object GbifService {
    * @return JSON string
    */
   def matchName(name:String):Option[String] = {
-    try {
-      val params = Map(
-        "verbose" -> "true",
-        "kingdom" -> "Animalia",
-        "name" -> URLEncoder.encode(name.replace(' ', '_'), "UTF-8")
-      )
-      val response:Response = get(params)
-      Some(response.text())
-    } catch {
-      case e: Exception => e.printStackTrace(); None
-    }
+    val params = Map(
+      "verbose" -> "true",
+      "kingdom" -> "Animalia",
+      "name" -> URLEncoder.encode(name.replace(' ', '_'), "UTF-8")
+    )
+    val response:Response = get(params)
+    Some(response.text())
   }
 
   /**

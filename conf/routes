@@ -6,5 +6,5 @@
 GET     /list                       controllers.GbifToolController.listSpecies()
 DELETE  /cleanup                    controllers.GbifToolController.cleanup()
 PUT     /markAllUsed                controllers.GbifToolController.markAllUsed()
-PUT     /match/:name                controllers.GbifToolController.matchName(name:String)
+PUT     /match/:name                controllers.GbifToolController.matchName(name: String)
 PUT     /matchAll                   controllers.GbifToolController.matchAll()
