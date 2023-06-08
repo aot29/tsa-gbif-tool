@@ -11,13 +11,6 @@ import java.sql.Connection
 trait DbService {
 
   /**
-   * Opens a connection to the database.
-   *
-   * @return SQL connection
-   */
-  protected def getConnection: Connection
-
-  /**
    * Lists all the species actually used in the Main table.
    *
    * @return List of Species objects or empty list

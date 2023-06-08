@@ -4,7 +4,7 @@ import models.Species
 import play.api.libs.json
 import play.api.libs.json._
 import play.api.mvc._
-import services.{GbifParser, GbifService, MySQLDbService}
+import services.{GbifParser, GbifService, MySQLDbService => db}
 
 import javax.inject.{Inject, Singleton}
 
@@ -27,7 +27,6 @@ class GbifToolController @Inject()(var controllerComponents: ControllerComponent
    * e.g. curl -v localhost:9000/list
    */
   def listSpecies(): Action[AnyContent] = Action { implicit request: Request[AnyContent] =>
-    val db = new MySQLDbService()
     try {
       val species  = db.listSpecies
       Ok(json.Json.toJson(species))
@@ -44,7 +43,6 @@ class GbifToolController @Inject()(var controllerComponents: ControllerComponent
    * e.g. curl -v --request DELETE localhost:9000/cleanup
    */
   def cleanup: Action[AnyContent] = Action { implicit request:Request[AnyContent] =>
-    val db = new MySQLDbService()
     try {
       db.markAllUnused
       db.deleteAllGBIFData()
@@ -63,7 +61,6 @@ class GbifToolController @Inject()(var controllerComponents: ControllerComponent
    * e.g. curl -v --request PUT localhost:9000/markAllUsed
    */
   def markAllUsed(): Action[AnyContent] = Action { implicit request:Request[AnyContent] =>
-    val db = new MySQLDbService()
     try {
       val speciesList  = db.listSpecies
       db.markAllUsed(speciesList)
@@ -84,7 +81,6 @@ class GbifToolController @Inject()(var controllerComponents: ControllerComponent
    * GBIF equivalent https://api.gbif.org/v1/species/match?verbose=true&kingdom=Animalia&name=Puma_concolor
    * */
   def matchName(name: String): Action[AnyContent] = Action { implicit request: Request[AnyContent] =>
-    val db = new MySQLDbService()
     try {
       val parser: GbifParser = new GbifParser(db)
       val gbifData = GbifService.matchName(name)
@@ -116,7 +112,6 @@ class GbifToolController @Inject()(var controllerComponents: ControllerComponent
    * e.g. curl -v --request PUT localhost:9000/matchAll
    */
   def matchAll(): Action[AnyContent] = Action { implicit request: Request[AnyContent] =>
-    val db = new MySQLDbService()
     try {
       val parser: GbifParser = new GbifParser(db)
       val speciesList  = db.listSpecies

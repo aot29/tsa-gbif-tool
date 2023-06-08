@@ -6,7 +6,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerTest
 import play.api.test._
 
 class GbifParserSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
-  private val db = new MySQLDbService
+  private val db = MySQLDbService
   private val parser: GbifParser = new GbifParser(db)
 
   "GbifParser" should {

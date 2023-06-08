@@ -6,13 +6,14 @@ import com.typesafe.config.ConfigFactory
 import java.sql.{Connection, DriverManager, PreparedStatement, Statement}
 
 
-class MySQLDbService extends DbService {
+object MySQLDbService extends DbService {
+
   /**
    * Opens a connection to the database.
    *
    * @return SQL connection
    */
-  protected def getConnection: Connection = {
+  private def connection: Connection = {
     val config = ConfigFactory.load()
     val driver = config.getString("db.driver")
     val url = config.getString("db.url")
@@ -21,8 +22,6 @@ class MySQLDbService extends DbService {
     Class.forName(driver)
     DriverManager.getConnection(url, username, password)
   }
-
-  implicit val connection: Connection = getConnection
 
   override def listSpecies: List[Species] = {
     val query: String = "SELECT UNIQUE species FROM main"
