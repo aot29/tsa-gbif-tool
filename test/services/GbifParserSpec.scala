@@ -1,15 +1,13 @@
 package services
 
-import akka.pattern.StatusReply.Success
 import models.{Species, TaxonomicStatus}
-import play.api.test._
-import play.api.test.Helpers._
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerTest
+import play.api.test._
 
 class GbifParserSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
-
-  private val parser: GbifParser = new GbifParser(MySQLDbService)
+  private val db = new MySQLDbService
+  private val parser: GbifParser = new GbifParser(db)
 
   "GbifParser" should {
     "parse json response for exact match" in {
