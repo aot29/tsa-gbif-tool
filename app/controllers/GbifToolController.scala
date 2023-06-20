@@ -1,11 +1,14 @@
 package controllers
 
 import models.Species
+import play.api.http.Status.OK
 import play.api.libs.json
 import play.api.libs.json._
 import play.api.mvc._
 import services.{GbifParser, GbifService, MySQLDbService => db}
 
+import scala.util.control.NonFatal
+import scala.util.{Failure, Success, Try, Using}
 import javax.inject.{Inject, Singleton}
 
 /**
@@ -27,13 +30,9 @@ class GbifToolController @Inject()(var controllerComponents: ControllerComponent
    * e.g. curl -v localhost:9000/list
    */
   def listSpecies(): Action[AnyContent] = Action { implicit request: Request[AnyContent] =>
-    try {
-      val species  = db.listSpecies
-      Ok(json.Json.toJson(species))
-    } catch {
-      case e: Exception => e.printStackTrace(); InternalServerError
-    } finally {
-      db.close()
+    db.listSpecies match {
+      case Success(species) => Ok(json.Json.toJson(species))
+      case Failure(e) => e.printStackTrace(); InternalServerError
     }
   }
 
@@ -42,15 +41,14 @@ class GbifToolController @Inject()(var controllerComponents: ControllerComponent
    *
    * e.g. curl -v --request DELETE localhost:9000/cleanup
    */
-  def cleanup: Action[AnyContent] = Action { implicit request:Request[AnyContent] =>
-    try {
-      db.markAllUnused
-      db.deleteAllGBIFData()
-      NoContent
-    } catch {
-      case e: Exception => e.printStackTrace(); InternalServerError
-    } finally {
-      db.close()
+  def cleanup: Action[AnyContent] = Action { implicit request: Request[AnyContent] =>
+    db.markAllUnused match {
+      case Success(count) =>
+        db.deleteAllGBIFData() match {
+          case Success(count) => NoContent
+          case Failure(e) => e.printStackTrace(); InternalServerError
+        }
+      case Failure(e) => e.printStackTrace(); InternalServerError
     }
   }
 
@@ -60,15 +58,12 @@ class GbifToolController @Inject()(var controllerComponents: ControllerComponent
    *
    * e.g. curl -v --request PUT localhost:9000/markAllUsed
    */
-  def markAllUsed(): Action[AnyContent] = Action { implicit request:Request[AnyContent] =>
-    try {
-      val speciesList  = db.listSpecies
-      db.markAllUsed(speciesList)
-      Accepted
-    } catch {
-      case e: Exception => e.printStackTrace(); InternalServerError
-    } finally {
-      db.close()
+  def markAllUsed(): Action[AnyContent] = Action { implicit request: Request[AnyContent] =>
+    db.listSpecies match {
+      case Success(species) =>
+        db.markAllUsed(species)
+        Accepted
+      case Failure(e)  => e.printStackTrace(); InternalServerError
     }
   }
 
@@ -84,23 +79,24 @@ class GbifToolController @Inject()(var controllerComponents: ControllerComponent
     try {
       val parser: GbifParser = new GbifParser(db)
       val gbifData = GbifService.matchName(name)
-        gbifData match {
-          case Some(gbifData) =>
-            val species = new Species(name.replace('_', ' '))
-            val parsedSpecies: Species = parser.parse(species, gbifData)
-            val rowCount = db.updateGbifData(parsedSpecies)
-            rowCount match {
-              case 0 =>
-                Conflict("Change rejected. Content probably set to IGNORE by admin\n")
-              case _ =>
-                Accepted(json.Json.parse(gbifData))
-            }
-          case None => NoContent
+      gbifData match {
+        case Some(gbifData) =>
+          val species = new Species(name.replace('_', ' '))
+          val parsedSpecies: Species = parser.parse(species, gbifData)
+          db.updateGbifData(parsedSpecies) match {
+            case Success(rowCount) =>
+              rowCount match {
+                case 0 =>
+                  Conflict("Change rejected. Content probably set to IGNORE by admin\n")
+                case _ =>
+                  Accepted(json.Json.parse(gbifData))
+              }
+            case Failure(e) => e.printStackTrace(); InternalServerError
+          }
+        case None => NoContent
       }
     } catch {
       case e: Exception => e.printStackTrace(); InternalServerError
-    } finally {
-      db.close()
     }
   }
 
@@ -114,23 +110,24 @@ class GbifToolController @Inject()(var controllerComponents: ControllerComponent
   def matchAll(): Action[AnyContent] = Action { implicit request: Request[AnyContent] =>
     try {
       val parser: GbifParser = new GbifParser(db)
-      val speciesList  = db.listSpecies
-      for(species <- speciesList) {
-        val gbifData = GbifService.matchName(species.latinName)
-        gbifData match {
-          case Some(gbifData) =>
-            val parsedSpecies:Species = parser.parse(species, gbifData)
-            // println(parsedSpecies)
-            db.updateGbifData(parsedSpecies)
-          case None =>
-            println(species.latinName + " not found")
-        }
+      db.listSpecies match {
+        case Success(speciesList) =>
+          for (species <- speciesList) {
+            val gbifData = GbifService.matchName(species.latinName)
+            gbifData match {
+              case Some(gbifData) =>
+                val parsedSpecies: Species = parser.parse(species, gbifData)
+                // println(parsedSpecies)
+                db.updateGbifData(parsedSpecies)
+              case None =>
+                println(species.latinName + " not found")
+            }
+          }
+          Accepted
+        case Failure(e) => e.printStackTrace(); InternalServerError
       }
-      Accepted
     } catch {
       case e: Exception => e.printStackTrace(); InternalServerError
-    } finally {
-      db.close()
     }
   }
 }
