@@ -4,6 +4,7 @@ import com.typesafe.config.ConfigFactory
 import requests.Response
 
 import java.net.URLEncoder
+import scala.util.Try
 
 /**
  * GBIF API client
@@ -21,14 +22,16 @@ object GbifService {
    * @param name latin name of a species
    * @return JSON string
    */
-  def matchName(name:String):Option[String] = {
-    val params = Map(
-      "verbose" -> "true",
-      "kingdom" -> "Animalia",
-      "name" -> URLEncoder.encode(name.replace(' ', '_'), "UTF-8")
-    )
-    val response:Response = get(params)
-    Some(response.text())
+  def matchName(name:String): Try[Option[String]] = {
+    Try {
+      val params = Map(
+        "verbose" -> "true",
+        "kingdom" -> "Animalia",
+        "name" -> URLEncoder.encode(name.replace(' ', '_'), "UTF-8")
+      )
+      val response: Response = get(params)
+      Some(response.text())
+    }
   }
 
   /**

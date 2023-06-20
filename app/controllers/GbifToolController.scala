@@ -76,28 +76,32 @@ class GbifToolController @Inject()(var controllerComponents: ControllerComponent
    * GBIF equivalent https://api.gbif.org/v1/species/match?verbose=true&kingdom=Animalia&name=Puma_concolor
    * */
   def matchName(name: String): Action[AnyContent] = Action { implicit request: Request[AnyContent] =>
-    try {
-      val parser: GbifParser = new GbifParser(db)
-      val gbifData = GbifService.matchName(name)
-      gbifData match {
-        case Some(gbifData) =>
-          val species = new Species(name.replace('_', ' '))
-          val parsedSpecies: Species = parser.parse(species, gbifData)
-          db.updateGbifData(parsedSpecies) match {
-            case Success(rowCount) =>
-              rowCount match {
-                case 0 =>
-                  Conflict("Change rejected. Content probably set to IGNORE by admin\n")
-                case _ =>
-                  Accepted(json.Json.parse(gbifData))
-              }
-            case Failure(e) => e.printStackTrace(); InternalServerError
-          }
-        case None => NoContent
-      }
-    } catch {
-      case e: Exception => e.printStackTrace(); InternalServerError
+    val gbifData = GbifService.matchName(name)
+    gbifData match {
+      case Success(gbifData) =>
+        val species = new Species(name.replace('_', ' '))
+        gbifData match {
+          case Some(gbifData) =>
+            updateSpecies(species, gbifData) match {
+              case Success(rowCount) =>
+                rowCount match {
+                  case 0 =>
+                    Conflict("Change rejected. Content probably set to IGNORE by admin\n")
+                  case _ =>
+                    Accepted(json.Json.parse(gbifData))
+                }
+              case Failure(e) => e.printStackTrace(); InternalServerError
+            }
+          case None => NoContent
+        }
+      case Failure(e) => e.printStackTrace(); InternalServerError
     }
+  }
+
+  private def updateSpecies(species: Species, gbifData: String): Try[Int] = {
+    val parser: GbifParser = new GbifParser(db)
+    val parsedSpecies: Species = parser.parse(species, gbifData)
+    db.updateGbifData(parsedSpecies)
   }
 
   /**
@@ -108,26 +112,26 @@ class GbifToolController @Inject()(var controllerComponents: ControllerComponent
    * e.g. curl -v --request PUT localhost:9000/matchAll
    */
   def matchAll(): Action[AnyContent] = Action { implicit request: Request[AnyContent] =>
-    try {
-      val parser: GbifParser = new GbifParser(db)
-      db.listSpecies match {
-        case Success(speciesList) =>
-          for (species <- speciesList) {
-            val gbifData = GbifService.matchName(species.latinName)
-            gbifData match {
-              case Some(gbifData) =>
-                val parsedSpecies: Species = parser.parse(species, gbifData)
-                // println(parsedSpecies)
-                db.updateGbifData(parsedSpecies)
-              case None =>
-                println(species.latinName + " not found")
-            }
+    db.listSpecies match {
+      case Success(speciesList) =>
+        for (species <- speciesList) {
+          val gbifData = GbifService.matchName(species.latinName)
+          gbifData match {
+            case Success(gbifData) =>
+              gbifData match {
+                case Some(gbifData) =>
+                  updateSpecies(species, gbifData) match {
+                    case Failure(e) => e.printStackTrace(); InternalServerError
+                    case _ => // continue
+                  }
+                case None =>
+                  println(species.latinName + " not found on GBIF")
+              }
+            case Failure(e) => e.printStackTrace(); InternalServerError
           }
-          Accepted
-        case Failure(e) => e.printStackTrace(); InternalServerError
-      }
-    } catch {
-      case e: Exception => e.printStackTrace(); InternalServerError
+        }
+        Accepted
+      case Failure(e) => e.printStackTrace(); InternalServerError
     }
   }
 }
