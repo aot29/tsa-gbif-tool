@@ -22,7 +22,7 @@ object GbifService {
    * @param name latin name of a species
    * @return JSON string
    */
-  def matchName(name:String): Try[Option[String]] = {
+  def matchName(name:String): Try[String] = {
     Try {
       val params = Map(
         "verbose" -> "true",
@@ -30,7 +30,7 @@ object GbifService {
         "name" -> URLEncoder.encode(name.replace(' ', '_'), "UTF-8")
       )
       val response: Response = get(params)
-      Some(response.text())
+      response.text()
     }
   }
 

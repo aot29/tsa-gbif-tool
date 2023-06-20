@@ -80,19 +80,15 @@ class GbifToolController @Inject()(var controllerComponents: ControllerComponent
     gbifData match {
       case Success(gbifData) =>
         val species = new Species(name.replace('_', ' '))
-        gbifData match {
-          case Some(gbifData) =>
-            updateSpecies(species, gbifData) match {
-              case Success(rowCount) =>
-                rowCount match {
-                  case 0 =>
-                    Conflict("Change rejected. Content probably set to IGNORE by admin\n")
-                  case _ =>
-                    Accepted(json.Json.parse(gbifData))
-                }
-              case Failure(e) => e.printStackTrace(); InternalServerError
+        updateSpecies(species, gbifData) match {
+          case Success(rowCount) =>
+            rowCount match {
+              case 0 =>
+                Conflict("Change rejected. Content probably set to IGNORE by admin\n")
+              case _ =>
+                Accepted(json.Json.parse(gbifData))
             }
-          case None => NoContent
+          case Failure(e) => e.printStackTrace(); InternalServerError
         }
       case Failure(e) => e.printStackTrace(); InternalServerError
     }
@@ -118,14 +114,9 @@ class GbifToolController @Inject()(var controllerComponents: ControllerComponent
           val gbifData = GbifService.matchName(species.latinName)
           gbifData match {
             case Success(gbifData) =>
-              gbifData match {
-                case Some(gbifData) =>
-                  updateSpecies(species, gbifData) match {
-                    case Failure(e) => e.printStackTrace(); InternalServerError
-                    case _ => // continue
-                  }
-                case None =>
-                  println(species.latinName + " not found on GBIF")
+              updateSpecies(species, gbifData) match {
+                case Failure(e) => e.printStackTrace(); InternalServerError
+                case _ => // continue
               }
             case Failure(e) => e.printStackTrace(); InternalServerError
           }
