@@ -1,6 +1,9 @@
 # Tsa GBIF Tools
 
-Tools for pulling taxonomy from GBIF
+Tools for pulling taxonomy from GBIF.
+* Uses Scala 2 and Play Framework (see in /app for code)
+* Runs in a Docker Container with JVM
+ see https://github.com/aot29/GBIF-tool for a version in Scala 3 with more documentation.
 
 ## Production
 * Make sure the relevant environment variables are set in .env and passed in docker-compose.yml
